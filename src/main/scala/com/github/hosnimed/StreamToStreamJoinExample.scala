@@ -99,6 +99,7 @@ object StreamToStreamJoinExample extends App with ConfigHelper {
   }
 
   val streams: KafkaStreams = new KafkaStreams(builder.build(), config)
+//  Delete Local State directory
   streams.cleanUp()
   streams.start()
   // Add shutdown hook to respond to SIGTERM and gracefully close Kafka Streams

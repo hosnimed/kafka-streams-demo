@@ -11,12 +11,16 @@ trait ConfigHelper {
 
   val config: Properties = {
     val p = new Properties()
-    p.put("log.retention.ms", "1000")
+    p.put("log.retention.minutes", (24 * 60).toString)
+    p.put("auto.offset.reset", "latest")
+
     p.put(org.apache.kafka.clients.consumer.ConsumerConfig.ALLOW_AUTO_CREATE_TOPICS_CONFIG, false.toString)
 
     p.put(StreamsConfig.APPLICATION_ID_CONFIG, "stream-scala-join")
     val bootstrapServers = "localhost:9092"
     p.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers)
+    //    Enable Optimizations
+    p.put(StreamsConfig.TOPOLOGY_OPTIMIZATION, StreamsConfig.OPTIMIZE)
 
     p.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String.getClass.getName)
     p.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.Long.getClass.getName)
@@ -27,6 +31,7 @@ trait ConfigHelper {
     p
   }
   val adminClient: AdminClient = AdminClient.create(config)
+
   def createTopics(topics: Iterable[String]) = {
     val newTopics = topics.map(t => new NewTopic(t, 1, 1))
     adminClient.createTopics(newTopics.asJavaCollection).all()
