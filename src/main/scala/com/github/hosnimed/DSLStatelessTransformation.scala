@@ -3,7 +3,6 @@ package com.github.hosnimed
 import java.time.Duration
 import java.util.Properties
 
-import DSLStatefulTransformation.config
 import org.apache.kafka.clients.producer.{KafkaProducer, ProducerRecord}
 import org.apache.kafka.streams.kstream.Printed
 import org.apache.kafka.streams.scala.{Serdes, StreamsBuilder}
