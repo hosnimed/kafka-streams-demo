@@ -9,14 +9,28 @@ import org.apache.kafka.streams.kstream.{JoinWindows, Printed}
 import org.apache.kafka.streams.scala.StreamsBuilder
 import org.apache.kafka.streams.scala.kstream._
 
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Future
 import scala.util.Try
-import collection.JavaConverters._
 
 object JoinExample extends App with ConfigHelper {
-
+  val joinType : JoinType = if (args.length > 0) {
+    args(0) match {
+      case "inner" => InnerJoin
+      case "left" => LeftJoin
+      case "outer" => OuterJoin
+      case _ => InnerJoin
+    }
+  } else {
+    InnerJoin
+  }
+  Console.err.println(s"Jointype : $joinType")
   import org.apache.kafka.streams.scala.ImplicitConversions._
   import org.apache.kafka.streams.scala.Serdes._
+
+  sealed trait JoinType
+  final case object InnerJoin extends JoinType
+  final case object LeftJoin extends JoinType
+  final case object OuterJoin extends JoinType
 
 
   val builder = new StreamsBuilder()
@@ -83,7 +97,7 @@ object JoinExample extends App with ConfigHelper {
   Future.sequence(Seq(
     Future (showStream(stream1)),
     Future (showStream(stream2)),
-    Future (StreamToStreamInnerJoin)
+    Future (StreamToStreamJoin)
   )).isCompleted
 */
 
@@ -99,15 +113,21 @@ object JoinExample extends App with ConfigHelper {
       TableToTableInnerJoin
     }
   }
-  StreamToStreamInnerJoin
+  StreamToStreamJoin(joinType = joinType)
   //  showStream(stream1)
   //  showTable(table1)
   //  StreamToTableInnerJoin
   //  showTable(table1,table2)
   //  TableToTableInnerJoin
 
-  private def StreamToStreamInnerJoin = {
-    val join: KStream[String, Long] = stream1.join(stream2)((v1, v2) => v1 + v2, JoinWindows.of(Duration.ofSeconds(1)))
+  private def StreamToStreamJoin(joinType: JoinType = InnerJoin) = {
+
+    val join: KStream[String, Long] = joinType match {
+      case InnerJoin => stream1.join(stream2)((v1, v2) => v1 + v2, JoinWindows.of(Duration.ofSeconds(1)))
+      case LeftJoin => stream1.leftJoin(stream2)((v1, v2) => v1 + v2, JoinWindows.of(Duration.ofSeconds(1)))
+      case OuterJoin => stream1.outerJoin(stream2)((v1, v2) => v1 + v2, JoinWindows.of(Duration.ofSeconds(1)))
+      case _ => stream1.join(stream2)((v1, v2) => v1 + v2, JoinWindows.of(Duration.ofSeconds(1)))
+    }
     join
       .peek((k, _) => println(s"=====================Stream JOIN Stream For Key : $k ====================="))
       .print(Printed.toSysOut())
