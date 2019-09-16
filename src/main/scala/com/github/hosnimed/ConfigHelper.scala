@@ -1,8 +1,10 @@
 package com.github.hosnimed
 
 import java.util.Properties
+
 import collection.JavaConverters._
 import org.apache.kafka.clients.admin.{AdminClient, NewTopic}
+import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.streams.StreamsConfig
 import org.apache.kafka.streams.scala.Serdes
 
@@ -12,7 +14,6 @@ trait ConfigHelper {
   val config: Properties = {
     val p = new Properties()
     p.put("log.retention.minutes", (24 * 60).toString)
-    p.put("auto.offset.reset", "latest")
 
     p.put(org.apache.kafka.clients.consumer.ConsumerConfig.ALLOW_AUTO_CREATE_TOPICS_CONFIG, false.toString)
 
