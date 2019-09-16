@@ -1,6 +1,5 @@
 package com.github.hosnimed
 
-
 import java.time.Duration
 
 import org.apache.kafka.clients.producer.{KafkaProducer, ProducerRecord}
@@ -12,7 +11,7 @@ import org.apache.kafka.streams.scala.kstream._
 import scala.concurrent.Future
 import scala.util.Try
 
-object JoinExample extends App with ConfigHelper {
+object TableToTableJoinExample extends App with ConfigHelper {
   val joinType: JoinType = if (args.length > 0) {
     args(0) match {
       case "inner" => InnerJoin
@@ -81,13 +80,6 @@ object JoinExample extends App with ConfigHelper {
     tempTable
   }
 
-  def showStream[K, V](streams: KStream[K, V]*) = {
-    streams.foreach { s =>
-      println(s.toString)
-      s.foreach((k, v) => println(s"($k : $v)"))
-    }
-  }
-
   def showTable[K, V](tables: KTable[K, V]*) = {
     tables.foreach { s =>
       println(s.toString)
@@ -107,50 +99,14 @@ object JoinExample extends App with ConfigHelper {
 
   Future {
     println("======> Sources Begin")
-    //    showStream(stream1, stream2)
     showTable(table1, table2)
     "PASS"
   }.andThen {
     case pass if pass.equals("PASS") => {
       println("======> Join Begin")
-//      StreamToTableJoin()
       TableToTableJoin()
     }
   }
-  //  StreamToStreamJoin(joinType = joinType)
-  //  showStream(stream1)
-  //  showTable(table1)
-
-  //  StreamToTableJoin()
-  showTable(table1, table2)
-  TableToTableJoin()
-
-  private def StreamToStreamJoin(joinType: JoinType = InnerJoin) = {
-
-    val join: KStream[String, Long] = joinType match {
-      case InnerJoin => stream1.join(stream2)((v1, v2) => v1 + v2, JoinWindows.of(Duration.ofSeconds(1)))
-      case LeftJoin => stream1.leftJoin(stream2)((v1, v2) => v1 + v2, JoinWindows.of(Duration.ofSeconds(1)))
-      case OuterJoin => stream1.outerJoin(stream2)((v1, v2) => v1 + v2, JoinWindows.of(Duration.ofSeconds(1)))
-      case _ => stream1.join(stream2)((v1, v2) => v1 + v2, JoinWindows.of(Duration.ofSeconds(1)))
-    }
-    join
-      .peek((k, _) => println(s"=====================Stream JOIN Stream For Key : $k ====================="))
-      .print(Printed.toSysOut())
-    join
-  }
-
-  private def StreamToTableJoin(joinType: JoinType = InnerJoin) = {
-    val join: KStream[String, Long] = joinType match {
-      case InnerJoin => stream1.join(table1)((v1, v2) => v1 + v2)
-      case LeftJoin => stream1.leftJoin(table1)((v1, v2) => v1 + v2)
-      case _ => stream1.join(table1)((v1, v2) => v1 + v2)
-    }
-    join
-      .peek((k, _) => println(s"=====================Stream JOIN Table For Key : $k ====================="))
-      .print(Printed.toSysOut())
-    join
-  }
-
 
   private def TableToTableJoin(joinType: JoinType = InnerJoin) = {
     val join: KTable[String, Long] = joinType match {
