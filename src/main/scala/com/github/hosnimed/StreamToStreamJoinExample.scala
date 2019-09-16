@@ -4,7 +4,7 @@ package com.github.hosnimed
 import java.time.Duration
 
 import org.apache.kafka.clients.producer.{KafkaProducer, ProducerRecord}
-import org.apache.kafka.streams.KafkaStreams
+import org.apache.kafka.streams.{KafkaStreams, StreamsConfig}
 import org.apache.kafka.streams.kstream.{JoinWindows, Printed}
 import org.apache.kafka.streams.scala.StreamsBuilder
 import org.apache.kafka.streams.scala.kstream._
@@ -12,6 +12,8 @@ import org.apache.kafka.streams.scala.kstream._
 import scala.concurrent.Future
 
 object StreamToStreamJoinExample extends App with ConfigHelper {
+  config.put(StreamsConfig.APPLICATION_ID_CONFIG, "stream-scala-stream-to-stream-join-example")
+
   val joinType: JoinType = if (args.length > 0) {
     args(0) match {
       case "inner" => InnerJoin

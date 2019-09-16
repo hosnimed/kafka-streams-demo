@@ -2,11 +2,11 @@ package com.github.hosnimed
 
 import java.util.Properties
 
-import collection.JavaConverters._
 import org.apache.kafka.clients.admin.{AdminClient, NewTopic}
-import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.streams.StreamsConfig
 import org.apache.kafka.streams.scala.Serdes
+
+import scala.collection.JavaConverters._
 
 trait ConfigHelper {
   this: App =>
@@ -17,7 +17,7 @@ trait ConfigHelper {
 
     p.put(org.apache.kafka.clients.consumer.ConsumerConfig.ALLOW_AUTO_CREATE_TOPICS_CONFIG, false.toString)
 
-    p.put(StreamsConfig.APPLICATION_ID_CONFIG, "stream-scala-join")
+    p.put(StreamsConfig.APPLICATION_ID_CONFIG, "stream-scala-example")
     val bootstrapServers = "localhost:9092"
     p.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers)
     //    Enable Optimizations

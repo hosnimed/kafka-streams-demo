@@ -13,6 +13,7 @@ import org.apache.kafka.streams.{KafkaStreams, KeyValue, StreamsConfig, Topology
 import scala.language.postfixOps
 
 object WordCountProcessorExample extends App with ConfigHelper {
+  config.put(StreamsConfig.APPLICATION_ID_CONFIG, "stream-scala-wordcount-processor")
 
   // setting offset reset to earliest so that we can re-run the demo code with the same pre-loaded data
   config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
