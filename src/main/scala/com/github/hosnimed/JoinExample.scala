@@ -13,7 +13,7 @@ import scala.concurrent.Future
 import scala.util.Try
 
 object JoinExample extends App with ConfigHelper {
-  val joinType : JoinType = if (args.length > 0) {
+  val joinType: JoinType = if (args.length > 0) {
     args(0) match {
       case "inner" => InnerJoin
       case "left" => LeftJoin
@@ -24,12 +24,16 @@ object JoinExample extends App with ConfigHelper {
     InnerJoin
   }
   Console.err.println(s"Jointype : $joinType")
+
   import org.apache.kafka.streams.scala.ImplicitConversions._
   import org.apache.kafka.streams.scala.Serdes._
 
   sealed trait JoinType
+
   final case object InnerJoin extends JoinType
+
   final case object LeftJoin extends JoinType
+
   final case object OuterJoin extends JoinType
 
 
@@ -56,7 +60,7 @@ object JoinExample extends App with ConfigHelper {
   val table1: KTable[String, Long] = {
     val tempTopic = "temp-table-topic-1"
     deleteTopics(Iterable(tempTopic)).whenComplete { (_, throwable) =>
-      Either.cond ( throwable == null ,  createTopics(Iterable(tempTopic)),  println(throwable.getLocalizedMessage) )
+      Either.cond(throwable == null, createTopics(Iterable(tempTopic)), println(throwable.getLocalizedMessage))
     }
     stream1.to(tempTopic)
     val tempTable = builder.table[String, Long](tempTopic)
@@ -109,16 +113,17 @@ object JoinExample extends App with ConfigHelper {
   }.andThen {
     case pass if pass.equals("PASS") => {
       println("======> Join Begin")
-      //      StreamToTableInnerJoin
-      TableToTableInnerJoin
+//      StreamToTableJoin()
+      TableToTableJoin()
     }
   }
-  StreamToStreamJoin(joinType = joinType)
+  //  StreamToStreamJoin(joinType = joinType)
   //  showStream(stream1)
   //  showTable(table1)
-  //  StreamToTableInnerJoin
-  //  showTable(table1,table2)
-  //  TableToTableInnerJoin
+
+  //  StreamToTableJoin()
+  showTable(table1, table2)
+  TableToTableJoin()
 
   private def StreamToStreamJoin(joinType: JoinType = InnerJoin) = {
 
@@ -134,8 +139,12 @@ object JoinExample extends App with ConfigHelper {
     join
   }
 
-  private def StreamToTableInnerJoin = {
-    val join: KStream[String, Long] = stream1.join(table1)((v1, v2) => v1 + v2)
+  private def StreamToTableJoin(joinType: JoinType = InnerJoin) = {
+    val join: KStream[String, Long] = joinType match {
+      case InnerJoin => stream1.join(table1)((v1, v2) => v1 + v2)
+      case LeftJoin => stream1.leftJoin(table1)((v1, v2) => v1 + v2)
+      case _ => stream1.join(table1)((v1, v2) => v1 + v2)
+    }
     join
       .peek((k, _) => println(s"=====================Stream JOIN Table For Key : $k ====================="))
       .print(Printed.toSysOut())
@@ -143,8 +152,13 @@ object JoinExample extends App with ConfigHelper {
   }
 
 
-  private def TableToTableInnerJoin = {
-    val join: KTable[String, Long] = table1.join(table2)((v1, v2) => v1 + v2)
+  private def TableToTableJoin(joinType: JoinType = InnerJoin) = {
+    val join: KTable[String, Long] = joinType match {
+      case InnerJoin => table1.join(table2)((v1, v2) => v1 + v2)
+      case LeftJoin => table1.leftJoin(table2)((v1, v2) => v1 + v2)
+      case OuterJoin => table1.outerJoin(table2)((v1, v2) => v1 + v2)
+      case _ => table1.join(table2)((v1, v2) => v1 + v2)
+    }
     join.toStream
       .peek((k, _) => println(s"=====================Table JOIN Table For Key : $k ====================="))
       .print(Printed.toSysOut())
